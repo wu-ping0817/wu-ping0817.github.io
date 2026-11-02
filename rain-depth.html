@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>纵深降雨 · Depth Rain</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0a0f1e; overflow: hidden; }
+  #rain { display: block; width: 100vw; height: 100vh; }
+  .hint {
+    position: fixed; left: 16px; bottom: 14px;
+    color: #9fb3d1; font: 12px/1.6 system-ui, sans-serif;
+    opacity: .55; pointer-events: none; letter-spacing: .3px;
+  }
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div class="hint">纵深降雨：近景(下)大而亮、快而疏；远景(上)小而淡、慢而密 —— 由近及远的空间延展</div>
+
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('rain');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  let layers = [];
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* =========================================================
+     深度分层模型（核心规律）
+     ---------------------------------------------------------
+     把雨场切成 4 个「景深平面」，从 近(底部, d=0) → 远(顶部, d=1)。
+     随深度递增（越往画面上方），四要素同步渐变，营造由近及远纵深：
+
+       1) 落点密度 count   : 16 → 30 → 48 → 72   （下方稀疏、上方密集）
+       2) 雨滴尺寸 len/w   : 大  → 小             （近大远小）
+       3) 透明度   op      : 高  → 低             （近亮远淡）
+       4) 运动速度 spd     : 快  → 慢             （视差 → 纵深）
+       5) 垂直分布 band    : 随深度整体上移        （近景落下部、远景落上部）
+
+     绘制顺序：远景先画(在后)、近景后画(在前)，得到正确遮挡。
+     ========================================================= */
+  const LAYER_DEFS = [
+    { d: 0.00, count: 16, band: [0.46, 1.00], len: [30, 42], w: [1.4, 1.9], op: [0.50, 0.68], spd: [760, 920] },
+    { d: 0.34, count: 30, band: [0.28, 0.84], len: [20, 28], w: [1.0, 1.4], op: [0.32, 0.46], spd: [560, 680] },
+    { d: 0.67, count: 48, band: [0.12, 0.66], len: [13, 19], w: [0.7, 1.0], op: [0.20, 0.30], spd: [400, 500] },
+    { d: 1.00, count: 72, band: [0.00, 0.50], len: [8, 12 ], w: [0.5, 0.7], op: [0.12, 0.20], spd: [260, 340] },
+  ];
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const WIND = 0.22; // 雨丝斜度（统一风向）
+
+  // 生成一颗雨滴；initial=true 时在所属 band 内随机分布，否则从 band 顶部进入
+  function makeDrop(def, initial) {
+    const [b0, b1] = def.band;
+    const len = rand(def.len[0], def.len[1]);
+    return {
+      x: rand(0, W),
+      y: initial ? rand(H * b0, H * b1) : H * b0 - len - rand(0, 40),
+      len,
+      w: rand(def.w[0], def.w[1]),
+      op: rand(def.op[0], def.op[1]),
+      spd: rand(def.spd[0], def.spd[1]),
+    };
+  }
+
+  function build() {
+    layers = LAYER_DEFS.map((def) => {
+      const [b0, b1] = def.band;
+      const drops = [];
+      for (let i = 0; i < def.count; i++) drops.push(makeDrop(def, true));
+      return { def, drops, top: H * b0, bottom: H * b1 };
+    });
+  }
+
+  // 运动规律：每帧 y += spd*dt；落出本层底部即在层顶重生（保持在自身 band，维持空间梯度）
+  function step(dt) {
+    for (const L of layers) {
+      for (const d of L.drops) {
+        d.y += d.spd * dt;
+        if (d.y - d.len > L.bottom) Object.assign(d, makeDrop(L.def, false));
+      }
+    }
+  }
+
+  function draw() {
+    // 背景：上深下浅夜空 + 底部薄雾，强化空间延展
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#0a0f1e');
+    g.addColorStop(1, '#0e1726');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // 远景先画、近景后画
+    for (let li = 0; li < layers.length; li++) {
+      const L = layers[li];
+      for (const d of L.drops) {
+        const dx = d.len * WIND;
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x - dx, d.y - d.len);
+        ctx.lineWidth = d.w;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = `rgba(198,222,255,${d.op})`;
+        ctx.stroke();
+      }
+    }
+
+    // 底部薄雾（近地处略亮，增强“地面”距离感）
+    const fog = ctx.createLinearGradient(0, H * 0.82, 0, H);
+    fog.addColorStop(0, 'rgba(120,160,220,0)');
+    fog.addColorStop(1, 'rgba(120,160,220,0.10)');
+    ctx.fillStyle = fog;
+    ctx.fillRect(0, H * 0.82, W, H * 0.18);
+  }
+
+  let last = 0;
+  function frame(now) {
+    if (!last) last = now;
+    let dt = (now - last) / 1000;
+    last = now;
+    if (dt > 0.05) dt = 0.05; // 切后台回来时防跳变
+    step(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.clientWidth;
+    H = canvas.clientHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    build();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  if (reduce) draw();              // 减少动态：静态单帧
+  else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

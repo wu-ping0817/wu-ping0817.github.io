@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+    <style>
+      .title{font-size:22px;font-weight:700;fill:#0f172a}
+      .lbl{font-size:13px;fill:#0f172a}
+      .box{stroke-width:1.5}
+      .cap{font-size:12px;fill:#64748b}
+      .legend{font-size:12px;fill:#334155}
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1000" height="700" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="500" y="34" text-anchor="middle" class="title">person_show 系统架构图 · 纯前端（无后端 / 无 SSR）</text>
+
+  <!-- ===== Build & Hosting chain ===== -->
+  <rect x="40" y="80" width="190" height="64" rx="10" fill="#eff6ff" stroke="#3b82f6" class="box"/>
+  <text x="135" y="106" text-anchor="middle" class="lbl">本地内容源</text>
+  <text x="135" y="124" text-anchor="middle" class="cap">Markdown / JSON</text>
+
+  <line x1="230" y1="112" x2="266" y2="112" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="270" y="80" width="170" height="64" rx="10" fill="#eff6ff" stroke="#3b82f6" class="box"/>
+  <text x="355" y="106" text-anchor="middle" class="lbl">构建期打包</text>
+  <text x="355" y="124" text-anchor="middle" class="cap">SSG / Vite 构建</text>
+
+  <line x1="440" y1="112" x2="476" y2="112" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="480" y="80" width="170" height="64" rx="10" fill="#eff6ff" stroke="#3b82f6" class="box"/>
+  <text x="565" y="106" text-anchor="middle" class="lbl">静态产物</text>
+  <text x="565" y="124" text-anchor="middle" class="cap">HTML / JS / CSS</text>
+
+  <line x1="650" y1="112" x2="696" y2="112" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="700" y="80" width="230" height="64" rx="10" fill="#eff6ff" stroke="#3b82f6" class="box"/>
+  <text x="815" y="106" text-anchor="middle" class="lbl">静态托管</text>
+  <text x="815" y="124" text-anchor="middle" class="cap">CDN / 对象存储（无服务器）</text>
+
+  <line x1="815" y1="144" x2="815" y2="186" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ===== Browser runtime container ===== -->
+  <rect x="60" y="190" width="880" height="382" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="80" y="214" class="cap" font-weight="700">浏览器运行环境（前端闭环 · 无后端 / 无 SSR）</text>
+
+  <!-- Router / State layer -->
+  <rect x="330" y="226" width="340" height="54" rx="10" fill="#f1f5f9" stroke="#475569" class="box"/>
+  <text x="500" y="248" text-anchor="middle" class="lbl">前端路由 / 状态层（Router + Store）</text>
+  <text x="500" y="266" text-anchor="middle" class="cap">读取内置静态内容，客户端导航</text>
+
+  <line x1="430" y1="280" x2="430" y2="298" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="590" y1="280" x2="590" y2="298" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Presentation layer group -->
+  <rect x="80" y="300" width="400" height="200" rx="12" fill="#faf5ff" stroke="#8b5cf6" class="box"/>
+  <text x="96" y="322" class="cap" font-weight="700" fill="#7c3aed">展示层</text>
+
+  <rect x="100" y="332" width="160" height="46" rx="8" fill="#ffffff" stroke="#8b5cf6" class="box"/>
+  <text x="180" y="359" text-anchor="middle" class="lbl">M1 首页 Hero</text>
+
+  <rect x="300" y="332" width="160" height="46" rx="8" fill="#ffffff" stroke="#8b5cf6" class="box"/>
+  <text x="380" y="359" text-anchor="middle" class="lbl">M2 博客</text>
+
+  <rect x="100" y="388" width="160" height="46" rx="8" fill="#ffffff" stroke="#8b5cf6" class="box"/>
+  <text x="180" y="415" text-anchor="middle" class="lbl">M3 作品</text>
+
+  <rect x="300" y="388" width="160" height="46" rx="8" fill="#ffffff" stroke="#8b5cf6" class="box"/>
+  <text x="380" y="415" text-anchor="middle" class="lbl">M4 关于我</text>
+
+  <!-- Support layer group -->
+  <rect x="520" y="300" width="400" height="200" rx="12" fill="#f0fdfa" stroke="#14b8a6" class="box"/>
+  <text x="536" y="322" class="cap" font-weight="700" fill="#0f766e">支撑层（横切）</text>
+
+  <rect x="540" y="332" width="360" height="52" rx="8" fill="#ffffff" stroke="#14b8a6" class="box"/>
+  <text x="720" y="362" text-anchor="middle" class="lbl">M7 动画交互系统</text>
+
+  <rect x="540" y="396" width="360" height="52" rx="8" fill="#ffffff" stroke="#14b8a6" class="box"/>
+  <text x="720" y="426" text-anchor="middle" class="lbl">M8 主题样式系统</text>
+
+  <!-- cross-cutting dependency arrow -->
+  <line x1="540" y1="358" x2="483" y2="358" stroke="#0f766e" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <text x="512" y="350" text-anchor="middle" class="cap" fill="#0f766e">横切依赖</text>
+
+  <!-- Footer note -->
+  <text x="500" y="612" text-anchor="middle" class="cap">部署形态：纯静态文件托管（CDN / 对象存储），无运行时服务器；</text>
+  <text x="500" y="632" text-anchor="middle" class="cap">页面渲染、数据呈现、用户交互全部在浏览器内闭环完成（无写路径）。</text>
+
+  <!-- Legend -->
+  <rect x="120" y="656" width="14" height="14" rx="3" fill="#eff6ff" stroke="#3b82f6"/>
+  <text x="140" y="668" class="legend">构建 / 托管</text>
+  <rect x="250" y="656" width="14" height="14" rx="3" fill="#faf5ff" stroke="#8b5cf6"/>
+  <text x="270" y="668" class="legend">展示层</text>
+  <rect x="370" y="656" width="14" height="14" rx="3" fill="#f0fdfa" stroke="#14b8a6"/>
+  <text x="390" y="668" class="legend">支撑层</text>
+</svg>

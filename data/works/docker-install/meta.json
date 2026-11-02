@@ -1,0 +1,16 @@
+{
+  "id": "docker-install",
+  "type": "web",
+  "category": "tool",
+  "title": "Docker 一键安装部署脚本",
+  "summary": "一条命令完成环境检测、Docker 安装与容器编排启动的自动化脚本，支持常见 Linux 发行版，可重复执行。",
+  "tech": ["Bash", "Docker", "Docker Compose", "CI/CD"],
+  "repo": "",
+  "demo": "",
+  "script": "docker_toolkit_OK.sh",
+  "file": "docker_toolkit_OK.sh",
+  "video": "11月2日.mp4",
+  "scriptLang": "bash",
+  "thumb": "",
+  "featured": true
+}

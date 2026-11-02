@@ -1,0 +1,159 @@
+/* =============================================================
+ * person_show · 双主题配色令牌（正式设计标准）
+ * 品牌双色：主色 #fefcff（近白） · 辅色 #b6d4f6（淡蓝）
+ * 规范文档：docs/配色标准.md
+ * 落地方式：在 main.js / App.vue 顶部 import 本文件；
+ *           根元素 <html data-theme="light|dark"> 切换；
+ *           所有界面与组件一律引用 var(--*)，禁止硬编码色值。
+ *
+ * ┌─────────────────────────────────────────────────────────────┐
+ * │ 文字颜色配置规则（暗色为主，亮色为辅，双模式对照）            │
+ * ├──────────────────┬──────────────────────────────────────────┤
+ * │ 层级 / 场景        │ 令牌 & 要求                              │
+ * ├──────────────────┼──────────────────────────────────────────┤
+ * │ 标题 h1–h6        │ --color-text-title  最高对比，近白/深墨   │
+ * │ 正文 / 默认       │ --color-text-base   主可读文字（≈ body）  │
+ * │ 正文（可选细分）   │ --color-text-body   与 base 同档，便于分工 │
+ * │ 次要说明 / 标签    │ --color-text-muted  对比 ≥ AA(4.5:1)     │
+ * │ 辅助 / 占位 / 脚注 │ --color-text-subtle 对比 ≥ AA(4.5:1)     │
+ * │ 卡片/面板内文字    │ --color-text-on-surface 必用于 surface/   │
+ * │ (深底/浅底皆可读)  │   elevated/subtle 背景，杜绝深叠深        │
+ * │ 强调按钮文字       │ --color-text-on-accent 仅用于 accent 面   │
+ * │ (浅蓝填充按钮)     │   （浅蓝底+深墨字，双主题皆 AA）          │
+ * │ 禁用态文字         │ --color-text-disabled 降对比，仍可见      │
+ * │ 链接 常态/悬停/已访 │ --color-link / --color-link-hover /      │
+ * │                    │   --color-link-visited                  │
+ * │ 强调文字（链接类）  │ --color-accent-strong 较 link 更饱和     │
+ * │ 成功 / 错误 / 警告 │ --color-success / --color-error /        │
+ * │ 提示文字           │   --color-warning                       │
+ * │ 焦点环             │ --color-focus                           │
+ * └──────────────────┴──────────────────────────────────────────┘
+ * 交互态要求：hover 在常态基础上提亮/加下划线；选中=accent 面+on-accent；
+ * 禁用=disabled 令牌且不得完全隐没；亮/暗两模式均须满足上表对比度。
+ * 对比度：全部组合 ≥ WCAG AA（正文 4.5:1 / 大文本 3:1）。
+ * ============================================================= */
+
+/* ---------- 品牌锚点（不可改，全站身份色） ---------- */
+:root {
+  --brand-primary: #fefcff;   /* 主色：近白 */
+  --brand-secondary: #b6d4f6; /* 辅色：淡蓝 */
+
+  /* 派生中性色：为保障可读性而设，非品牌色，随主题切换 */
+  --ink-900: #0c1626; /* 最深墨（按钮文字 / 暗主题底最深一档） */
+  --ink-800: #16233b; /* 深墨（亮主题正文 / 标题） */
+  --ink-600: #4a5b73; /* 中灰墨（次要文字） */
+
+  /* 主题过渡（切换时避免硬切） */
+  --theme-transition: background-color .24s ease, color .24s ease,
+                      border-color .24s ease, fill .24s ease;
+}
+
+/* =============================================================
+ * 亮色主题
+ * 主色 #fefcff → 页面主画布 / 焦点留白
+ * 辅色 #b6d4f6 → 内容区背景 / 主操作填充（配深墨文字）
+ * ============================================================= */
+:root,
+[data-theme="light"] {
+  /* 背景层级 */
+  --color-bg-base: #fefcff;     /* 页面底色 = 主色（焦点留白） */
+  --color-bg-surface: #b6d4f6;  /* 内容区/卡片底色 = 辅色 */
+  --color-bg-elevated: #ffffff; /* 浮起卡片（白，介于主辅之间） */
+  --color-bg-subtle: #eaf2fc;   /* 浅蓝灰：分隔线 / hover 底 */
+
+  /* —— 文字层级（亮色：深墨在浅底，对比充足）—— */
+  --color-text-title: #0c1626;     /* 标题：最深墨 */
+  --color-text-body: #1b2a42;      /* 正文细分 */
+  --color-text-base: #16233b;      /* 正文 / 默认（深墨） */
+  --color-text-muted: #4a5b73;     /* 次要文字（≥AA） */
+  --color-text-subtle: #60748f;    /* 辅助 / 占位（≥AA） */
+  --color-text-on-surface: #16233b;/* 卡片/面板内：深墨压淡蓝，对比 ≥8:1 */
+  --color-text-on-elevated: #16233b;/* 浮起卡内：深墨压白 */
+  --color-text-on-accent: #0c1626; /* 压在辅色强调面上的深墨字 */
+  --color-text-disabled: #93a1b5;  /* 禁用态：降对比但仍可辨 */
+
+  /* 强调 / 操作 */
+  --color-accent: #b6d4f6;        /* 强调面 = 辅色 */
+  --color-accent-hover: #a3c8f1;   /* 辅色 hover 微深 */
+  --color-accent-strong: #1f5fb0;  /* 链接类强调文字（深蓝，浅底 AA） */
+  --color-link: #25518a;          /* 链接（辅色系加深，白/蓝底均 AA） */
+  --color-link-hover: #173d6b;     /* 链接 hover 更深 */
+  --color-link-visited: #5b3fa0;   /* 已访问：紫，区分明显 */
+  --color-focus: #6fa8e8;         /* 焦点环（辅色加深，确保可见） */
+
+  /* 状态文字 */
+  --color-success: #1f7a4d;       /* 成功（深绿，白底 AA） */
+  --color-error: #c0271f;         /* 错误（深红，白底 AA） */
+  --color-warning: #8a5a00;       /* 警告（深琥珀，白底 AA） */
+
+  /* 线框 */
+  --color-border: #cfe0f5;       /* 边框（辅色系浅化） */
+  --color-shadow: 22, 40, 70;    /* 阴影 RGB（配合 alpha 使用） */
+}
+
+/* =============================================================
+ * 暗色主题（主配色方案）
+ * 主色 #fefcff → 前景文字 / 强调文字（近白，深底上高对比）
+ * 辅色 #b6d4f6 → 强调色（链接 / 焦点环 / 主操作填充）
+ * 关键修复：卡片(surface)为深蓝，其内文字必须用 on-surface(近白)，
+ *          严禁使用 on-accent(深墨)，否则深叠深不可见。
+ * ============================================================= */
+[data-theme="dark"] {
+  /* 背景层级（派生深墨蓝，非品牌色） */
+  --color-bg-base: #0e1726;     /* 页面深底 */
+  --color-bg-surface: #152033;  /* 内容卡（深） */
+  --color-bg-elevated: #1d2b42; /* 浮起卡片（略浅） */
+  --color-bg-subtle: #16263f;   /* 分隔 / hover 底 */
+
+  /* —— 文字层级（暗色：近白在深底，对比充足）—— */
+  --color-text-title: #ffffff;     /* 标题：纯白，最醒目 */
+  --color-text-body: #e9eef7;      /* 正文细分（近白，降低眩光） */
+  --color-text-base: #fefcff;      /* 正文 / 默认（主色近白） */
+  --color-text-muted: #b9c6d8;     /* 次要文字（深底 ≥8:1） */
+  --color-text-subtle: #8a9bb4;    /* 辅助 / 占位（深底 ≥5:1） */
+  --color-text-on-surface: #f2f5fb;/* 卡片/面板内：近白压深蓝，对比 ≥12:1 */
+  --color-text-on-elevated: #f2f5fb;/* 浮起卡内：近白 */
+  --color-text-on-accent: #0c1626; /* 压在浅蓝强调面上的深墨字 */
+  --color-text-disabled: #64748b;  /* 禁用态：降对比但仍可辨 */
+
+  /* 强调 / 操作（辅色成为强调） */
+  --color-accent: #b6d4f6;        /* 强调色 = 辅色 */
+  --color-accent-hover: #cbe2fb;   /* 辅色 hover 微亮 */
+  --color-accent-strong: #cbe2fb;  /* 链接类强调文字（提亮蓝，深底 AA） */
+  --color-link: #9cc6f2;          /* 链接（淡蓝系提亮） */
+  --color-link-hover: #cbe2fb;     /* 链接 hover 更亮 */
+  --color-link-visited: #c4b6f6;   /* 已访问：淡紫，区分明显 */
+  --color-focus: #8fc0f5;          /* 焦点环 */
+
+  /* 状态文字（在深底上提亮以保证对比） */
+  --color-success: #6fe0a0;       /* 成功（亮绿，深底 AA） */
+  --color-error: #ff8e8e;          /* 错误（亮红，深底 AA） */
+  --color-warning: #ffd27a;       /* 警告（亮琥珀，深底 AA） */
+
+  /* 线框 */
+  --color-border: #2a3c57;
+  --color-shadow: 0, 0, 0;
+}
+
+/* ---------- 全局过渡：主题切换时颜色平滑变化 ---------- */
+html {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+  transition: var(--theme-transition);
+}
+* {
+  transition: var(--theme-transition);
+}
+
+/* ---------- 通用组件令牌用法示例（组件内引用即可） ----------
+ * 主操作按钮(accent 面)：background: var(--color-accent);
+ *                         color: var(--color-text-on-accent);  ← 仅此处用 on-accent
+ * 内容卡片(surface)：    background: var(--color-bg-surface);
+ *                         color: var(--color-text-on-surface);  ← 必须用 on-surface
+ * 页面画布：             background: var(--color-bg-base);
+ *                         color: var(--color-text-base);
+ * 链接：                 color: var(--color-link);  hover → --color-link-hover
+ * 焦点态：               outline: 2px solid var(--color-focus);
+ * 边框：                 border: 1px solid var(--color-border);
+ * 状态文字：             .text-success / .text-error / .text-warning
+ * ---------------------------------------------------------------- */

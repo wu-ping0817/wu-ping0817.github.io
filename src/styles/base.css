@@ -1,0 +1,217 @@
+/* =============================================================
+ * base.css · 基础重置 / 排版 / 通用动效类
+ * 颜色一律引用 theme.css 的令牌变量，禁止硬编码。
+ * ============================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 全局动效缓动变量（与 src/motion/tokens.js 保持一致） */
+:root {
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-emphasis: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+  background: var(--color-bg-base);
+  color: var(--color-text-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ---------- 路由切换过渡 ----------
+   页面切换的「逐元素错峰缓入 / 缓出」由 src/scripts/pageTransition.js
+   通过 Web Animations API 驱动（<transition :css="false"> 的 JS 钩子）。
+   注意：不要在此对 .screen 或其祖先使用 transform，否则可能触发
+   position:fixed 后代的定位异常（粒子背景固定在 .layout-particles，不受影响）。 */
+
+/* ---------- 滚动渐显（v-reveal 指令） ---------- */
+.reveal-init {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.42s ease, transform 0.42s ease;
+}
+.reveal-init.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- 板块内容「依次逐个」滚动渐显（v-reveal-group 指令） ---------- */
+/* 容器需带 .reveal-group；子元素带 .reveal-item 才会被级联触发。
+   初始隐藏态在渲染即生效（避免 JS 接管前闪烁），仅动 opacity/transform（合成层友好）。
+   强化版：元素进入视口时从「侧边」明显滑入（左右交替），配合轻微缩放，
+   明显增强滑动类动画表现力与视觉冲击。 */
+.reveal-group .reveal-item {
+  opacity: 0;
+  transform: translateX(-60px) scale(0.98);
+  transition: opacity 0.6s ease,
+    transform 0.62s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
+}
+/* 直接子项左右交替滑入，形成更丰富的节奏感 */
+.reveal-group > .reveal-item:nth-child(even) {
+  transform: translateX(60px) scale(0.98);
+}
+.reveal-group .reveal-item.is-visible {
+  opacity: 1;
+  transform: none;
+  will-change: auto; /* 可见后释放 will-change，避免长期占用合成层 */
+}
+
+/* ---------- 滚动联动持续动效（v-scroll-fx 指令） ---------- */
+/* 初始隐藏，避免 JS 接管前闪烁；指令会用内联样式持续控制。 */
+.scroll-fx {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* ---------- 可访问性：动效降级 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-init,
+  .scroll-fx {
+    transition: none;
+  }
+  .reveal-init,
+  .scroll-fx,
+  .reveal-group .reveal-item {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
+}
+
+/* 焦点可见（键盘可达） */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- 文字层级令牌（暗色为主，双主题对照） ----------
+   标题统一用 title 令牌；占位符 / 禁用态 / 状态色提供全局兜底与工具类。
+   完整规则见 theme.css 顶部「文字颜色配置规则」表。 */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-title);
+}
+::placeholder {
+  color: var(--color-text-subtle);
+  opacity: 1;
+}
+:disabled,
+[aria-disabled="true"] {
+  color: var(--color-text-disabled);
+}
+
+/* 状态 / 层级文字工具类（按需挂 class） */
+.text-title    { color: var(--color-text-title); }
+.text-body     { color: var(--color-text-body); }
+.text-muted    { color: var(--color-text-muted); }
+.text-subtle   { color: var(--color-text-subtle); }
+.text-link     { color: var(--color-link); }
+.text-disabled { color: var(--color-text-disabled); }
+.text-error    { color: var(--color-error); }
+.text-success  { color: var(--color-success); }
+.text-warning  { color: var(--color-warning); }
+
+/* ---------- 单屏页面工具类：内容垂直居中、占满视口、为底部导航预留空间 ---------- */
+.screen {
+  flex: 1;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 1.5rem 7rem;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+@media (max-width: 560px) {
+  .screen {
+    padding: 3rem 1.1rem 6.5rem;
+  }
+}
+
+/* ---------- Markdown 正文排版（.prose，供文章详情页使用） ---------- */
+.prose {
+  color: var(--color-text-base);
+  line-height: 1.8;
+  max-width: 70ch;
+}
+.prose h2 {
+  font-size: 1.5rem;
+  margin: 2.2rem 0 0.8rem;
+  line-height: 1.3;
+}
+.prose h3 {
+  font-size: 1.2rem;
+  margin: 1.6rem 0 0.5rem;
+}
+.prose p {
+  margin: 0 0 1.1rem;
+}
+.prose ul,
+.prose ol {
+  margin: 0 0 1.1rem;
+  padding-left: 1.4rem;
+}
+.prose li {
+  margin: 0.3rem 0;
+}
+.prose a {
+  color: var(--color-link);
+  text-decoration: underline;
+}
+.prose code {
+  background: var(--color-bg-subtle);
+  padding: 0.12em 0.4em;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+.prose pre {
+  background: var(--color-bg-subtle);
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  overflow: auto;
+}
+.prose pre code {
+  background: none;
+  padding: 0;
+}
+.prose blockquote {
+  margin: 1.2rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-text-muted);
+}
+.prose img {
+  border-radius: 12px;
+  margin: 1.2rem 0;
+}

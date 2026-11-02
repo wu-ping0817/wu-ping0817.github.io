@@ -1,0 +1,41 @@
+/* ============================================================
+ * anim-3d.css · 全局三维动效层
+ * 与 base.css 的动效语言（--ease-standard / --color-* 令牌）保持统一。
+ * 设计原则：
+ *   - 仅使用 transform / opacity（GPU 合成，零布局抖动）；
+ *   - 全部尊重 prefers-reduced-motion；
+ *   - 通过 v-tilt / v-depth / v-page3d 三个指令统一驱动，便于复用与维护。
+ * ============================================================ */
+
+:root {
+  --enter-perspective: 1400px; /* 页面入场透视距离 */
+  --tilt-perspective: 900px;  /* 悬停倾斜透视距离 */
+  --depth-perspective: 1000px; /* 滚动纵深透视距离 */
+}
+
+/* ---------- 三维悬停倾斜宿主（可选：给卡片组建立透视上下文） ---------- */
+.tilt-host {
+  transform-style: preserve-3d;
+  perspective: var(--tilt-perspective);
+}
+
+/* ---------- 环境漂浮：Z 轴轻微呼吸，增强空间纵深感 ---------- */
+@keyframes floatZ {
+  0%, 100% { transform: translateZ(0); }
+  50%      { transform: translateZ(20px); }
+}
+.float-3d {
+  animation: floatZ 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* ---------- 三维入场键帧（兜底；实际 transition 由 v-page3d 内联精确控制） ---------- */
+@keyframes depthRise {
+  from { opacity: 0; transform: perspective(1400px) rotateX(10deg) translateY(28px) translateZ(-80px); }
+  to   { opacity: 1; transform: perspective(1400px) rotateX(0) translateY(0) translateZ(0); }
+}
+
+/* ---------- 减少动效：全部降级为静态，关闭持续动画 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .float-3d { animation: none !important; }
+}

@@ -1,0 +1,35 @@
+# ===== 依赖 =====
+node_modules
+
+# ===== 构建产物（由 CI 重新生成，无需入库）=====
+dist
+dist-ssr
+dist-verify
+
+# Vite 临时编译缓存（vite.config.js.timestamp-*.mjs）
+vite.config.js.timestamp-*.mjs
+
+# ===== 本地调试 / 验证产物（历史临时文件）=====
+.verify-build*
+playtest.mjs
+test/_shot.mjs
+click-disappear-debug-guide.html
+*.local
+
+# ===== 编辑器 / 系统 =====
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+logs
+*.log
+npm-debug.log*
+.pnpm-debug.log*
+
+# ===== 环境变量 =====
+.env
+.env.*
+!.env.example
+
+# ===== 项目本地数据（记忆 / 自动化，不入库）=====
+.workbuddy

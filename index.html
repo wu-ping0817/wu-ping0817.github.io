@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="person_show · 个人展示博客：内容展示与强视觉体验的纯前端站点" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>person_show · 个人展示</title>
+    <script>
+      // 首屏前同步设定主题，避免 Vue 挂载前的主题闪烁
+      (function () {
+        try {
+          var t = localStorage.getItem('person-show-theme')
+          if (!t) {
+            t = window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+          }
+          document.documentElement.dataset.theme = t
+        } catch (e) {}
+      })()
+    </script>
+    <style>
+      /* 首屏兜底：Vue 挂载前先铺好主题底色，避免白屏闪烁 */
+      html[data-theme='light'],
+      html[data-theme='light'] body,
+      html[data-theme='light'] #app {
+        background: #fefcff;
+      }
+      html[data-theme='dark'],
+      html[data-theme='dark'] body,
+      html[data-theme='dark'] #app {
+        background: #0e1726;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      /* 极简加载占位，Vue 接管后由全屏加载动画无缝接替 */
+      .boot-splash {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        z-index: 1;
+      }
+      .boot-splash span {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 3px solid #b6d4f6;
+        border-top-color: transparent;
+        display: block;
+        animation: boot-spin 1s linear infinite;
+      }
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-splash span {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="boot-splash" aria-hidden="true"><span></span></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
