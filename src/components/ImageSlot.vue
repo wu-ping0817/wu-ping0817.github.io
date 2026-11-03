@@ -66,6 +66,7 @@ const initial = computed(() =>
 .img-slot {
   position: relative;
   width: 100%;
+  max-width: 100%;
   overflow: hidden;
   border-radius: 12px;
   background:
@@ -140,12 +141,17 @@ const initial = computed(() =>
 .img-slot__img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* 非圆形（普通图片）：完整显示整图、保持原始宽高比、不裁切、不溢出 */
+  object-fit: contain;
   display: block;
   /* 加载完成淡入 + 轻微缩放，作为"内容加载过渡" */
   opacity: 0;
   transform: scale(1.04);
   transition: opacity 0.55s ease, transform 0.6s var(--ease-standard);
+}
+/* 圆形头像：填满圆形区域（标准头像裁切，不失真） */
+.img-slot--round .img-slot__img {
+  object-fit: cover;
 }
 .img-slot__img.is-ready {
   opacity: 1;

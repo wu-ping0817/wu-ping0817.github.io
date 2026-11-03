@@ -39,6 +39,14 @@ function preload(src) {
   })
 }
 
+// 加载页背景装饰图（氛围底图，完整显示不裁切）——来自 public/img 资源目录。
+// 用 BASE_URL 前缀保证用户页 / 项目页部署下路径都正确；contain 保证整图可见、自适应、无横向滚动。
+const POSTER_SRC = (import.meta.env.BASE_URL || '/') + 'img/Blue and Red French Party Poster.png'
+const bgStyle = computed(() => ({
+  // 一层与页面底色同调的暗化叠加，让海报融为底色而非突兀的图片
+  backgroundImage: `linear-gradient(color-mix(in srgb, var(--color-bg-base) 60%, transparent), color-mix(in srgb, var(--color-bg-base) 60%, transparent)), url("${POSTER_SRC}")`,
+}))
+
 async function boot() {
   start = performance.now()
 
@@ -50,6 +58,9 @@ async function boot() {
   Promise.all(assets.map(preload)).then(() => {
     assetsPending = 0
   })
+
+  // 背景装饰图预热缓存（不计入进度门控，避免影响加载节奏）
+  preload(POSTER_SRC)
 
   const onLoad = () => {
     loadFired = true
@@ -118,6 +129,8 @@ onBeforeUnmount(() => {
     @keydown.enter.prevent="enter"
     @keydown.space.prevent="enter"
   >
+    <!-- 背景装饰图：氛围底图，置于粒子层之下，压暗处理不与内容争视线 -->
+    <div class="loader-bg-img" :style="bgStyle" aria-hidden="true"></div>
     <ParticlesBg class="loader-particles" :density="2.6" />
     <div class="loader-veil" aria-hidden="true"></div>
 
@@ -202,6 +215,59 @@ onBeforeUnmount(() => {
 .loader-particles {
   position: absolute;
   inset: 0;
+}
+
+/* 背景装饰图：完整显示整张海报（contain，不裁切、保持原始宽高比），
+   偏右放置、轻微压暗与柔化，置于粒子层之下，作为氛围底图不抢内容。
+   入场用自然淡入+轻微位移，避免突兀出现（尊重 reduce-motion）。 */
+.loader-bg-img {
+  position: absolute;
+  /* 略多超出视口，配合父级 overflow:hidden，放大漂浮幅度时也不会露出边缘或产生滚动条 */
+  inset: -8vmax;
+  background-position: right center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: saturate(0.92) blur(2px);
+  pointer-events: none;
+  opacity: 0;
+  /* 入场淡入右滑 + 之后无限循环轻微漂浮/呼吸缩放，让海报"活"起来 */
+  animation:
+    bgImgIn 1.1s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s forwards,
+    bgFloat 8s ease-in-out 1.5s infinite;
+}
+@keyframes bgImgIn {
+  from {
+    opacity: 0;
+    transform: translateX(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes bgFloat {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(-34px, 22px, 0) scale(1.12) rotate(-1.2deg);
+  }
+  50% {
+    transform: translate3d(30px, -18px, 0) scale(1.08) rotate(1deg);
+  }
+  75% {
+    transform: translate3d(-20px, -24px, 0) scale(1.1) rotate(-0.8deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader-bg-img {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* 中心柔光，避免粒子过亮刺眼 */

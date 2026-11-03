@@ -3,8 +3,7 @@ node_modules
 
 # ===== 构建产物（由 CI 重新生成，无需入库）=====
 dist
-dist-ssr
-dist-verify
+dist-*
 
 # Vite 临时编译缓存（vite.config.js.timestamp-*.mjs）
 vite.config.js.timestamp-*.mjs
