@@ -2,7 +2,6 @@
 import { ref, onBeforeUnmount } from 'vue'
 import { useContent } from '@/composables/useContent'
 import ImageSlot from '@/components/ImageSlot.vue'
-import Hobbies from '@/components/Hobbies.vue'
 
 const { profile } = useContent()
 
@@ -36,11 +35,9 @@ function onAvatarLeave() {
 
 /* ============ 页内「此刻的我」状态切换（手动触发，无自动循环） ============ */
 const moods = [
-  '正在听窗外的雨声',
-  '刚被一只路过的猫彻底劝退',
-  '便利店关东煮的忠实信徒',
-  '深夜漫无目的地 city walk 中',
-  '正在做推文',
+  '我现在正在做推文',
+  '我现在正在打游戏',
+  '我现在正在做测试',
 ]
 const moodIdx = ref(0)
 function goMood(i) {
@@ -60,8 +57,6 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="screen about">
-    <h1 class="page-title">这就是我（不装版）</h1>
-
     <div class="intro">
       <div
         ref="avatarEl"
@@ -141,35 +136,21 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- 爱好模块：自包含组件（独立命名空间 hb-*、数据经 props 传入） -->
-    <Hobbies :items="profile.hobbies" />
+    <!-- 最近打算做的 -->
+    <div class="plans">
+      <span class="mood-label"
+        ><i class="live-dot" aria-hidden="true"></i>最近打算做的</span
+      >
+      <ul class="plans-list">
+        <li class="plans-item">游戏没有中文实在难受</li>
+      </ul>
+    </div>
   </section>
 </template>
 
 <style scoped>
 .about {
   text-align: left;
-}
-.page-title {
-  margin: 0 0 1.4rem;
-  font-size: 2rem;
-  position: relative;
-  display: inline-block;
-}
-.page-title::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -6px;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-accent, #3b82f6), transparent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.page-title:hover::after {
-  transform: scaleX(1);
 }
 
 .intro {
@@ -325,12 +306,49 @@ onBeforeUnmount(() => {
   transform: scale(1.3);
 }
 
+/* ---------- 最近打算做的 ---------- */
+.plans {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 0 1.6rem;
+  padding: 1rem 1.15rem;
+  border-radius: 16px;
+  max-width: 640px;
+  background: color-mix(in srgb, var(--color-accent, #3b82f6) 7%, var(--color-bg-surface));
+  border: 1px solid var(--color-border);
+}
+.plans-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.plans-item {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+.plans-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent, #3b82f6);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .avatar-wrap,
   .mood-text,
   .mood-dot,
-  .live-dot,
-  .page-title::after {
+  .live-dot {
     transition: none !important;
     animation: none !important;
   }
