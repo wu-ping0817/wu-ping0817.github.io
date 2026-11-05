@@ -84,7 +84,7 @@ onBeforeUnmount(() => {
     <!-- 页内状态切换：「此刻的我」（点击圆点·上下项·文字切换；无自动循环） -->
     <div class="mood">
       <span class="mood-label"
-        ><i class="live-dot" aria-hidden="true"></i>我现在：</span
+        ><i class="live-dot" aria-hidden="true"></i>状态：</span
       >
       <div
         class="mood-stage"
