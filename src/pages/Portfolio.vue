@@ -8,8 +8,7 @@ const { portfolio } = useContent()
 
 /* ---------- 数据源 ---------- */
 const rawItems = computed(() => portfolio.items)
-const PER_PAGE = 6 // 默认每屏展示 6 份，突出核心
-const DEFAULT_RING = 6 // 空数据占位演示用的环形槽位数（有真实数据时随当前页自适应）
+const PER_PAGE = 6 // 每屏最多 6 份；不足时只展示真实作品，不补任何占位卡
 const page = ref(0)
 const pageCount = computed(() => Math.max(1, Math.ceil(all.value.length / PER_PAGE)))
 const pageItems = computed(() =>
@@ -74,29 +73,13 @@ const isFiltering = computed(
 /* 分页数据流的 `all` 即「筛选后」的作品（导航栏过滤直达转盘/分页） */
 const all = computed(() => filtered.value)
 
-/* ---------- 环形占位填充：保证转盘始终有足够卡片，避免单卡时公转动画异常 ----------
-   - 真实作品数 < DEFAULT_RING 时，用骨架占位补齐到 DEFAULT_RING 张；
-     否则 STEP=360°，单卡自旋一圈又回到原位，看起来像「原地打转 / 翻转」的动画异常。
-   - 真实作品 >= DEFAULT_RING 时不补占位，环上全是真实卡片。
-   - 占位卡复用 skeleton 渲染、不打开详情(openDetail 已拦截)、不出现任何操作按钮，
-     内容留空即可（"占位什么都不需要写"）。 */
-const ringPlaceholders = (count) =>
-  Array.from({ length: count }, (_, i) => ({
-    id: 'ph-' + (page.value * DEFAULT_RING + i),
-    placeholder: true,
-    category: '',
-    title: '',
-    summary: '',
-    tech: [],
-    repo: '',
-    demo: '',
-    script: '',
-  }))
-const displayItems = computed(() => {
-  const real = pageItems.value
-  if (real.length >= DEFAULT_RING) return real
-  return [...real, ...ringPlaceholders(DEFAULT_RING - real.length)]
-})
+/* ---------- 转盘数据：只放真实作品，不再用骨架卡补位 ----------
+   - 新增作品只需在 data/works/<id>/ 放好 meta.json（构建期自动扫描），
+     卡片数量随数据自动增长，无需改动本组件。
+   - 仅 1 件作品时不公转：STEP=360° 的步进等于原地空转，无视觉意义，
+     此时卡片固定为正面焦点态居中展示；>= 2 件时恢复环形转盘与自动轮换。 */
+const displayItems = computed(() => pageItems.value)
+const isSingle = computed(() => displayItems.value.length <= 1)
 
 /* =========================================================================
    立体环形转盘（核心）—— 单一主视觉中心 + 沿纵深公转
@@ -108,8 +91,8 @@ const displayItems = computed(() => {
      状态——侧翼微倾、远端更虚更暗更小，作为背景层次存在，绝不共为主焦点；
    - 节奏放慢：缓动切换(TRANSITION) + 单件停留(DWELL)，停顿久、过渡平缓。
    ========================================================================= */
-/* 环形卡片数随当前页实际数据量自适应：满 6 张则 6 槽位，不足则按实际数量铺满整圈，
-   避免出现空缺区域；角间距随之动态均分（360° / 实际数量）。 */
+/* 环形卡片数随当前页真实作品数自适应，角间距动态均分（360° / 实际数量）。
+   0 件（如搜索无结果）时兜底为 1，避免 STEP 除零。 */
 const ringCount = computed(() => Math.max(1, displayItems.value.length))
 const STEP = computed(() => 360 / ringCount.value)
 const SPIN0 = 0
@@ -233,8 +216,9 @@ function tick(now) {
       tweening = false
       holdUntil = now + DWELL
     }
-  } else if (!autoPaused.value && now >= holdUntil) {
+  } else if (!isSingle.value && !autoPaused.value && now >= holdUntil) {
     // 空闲且未暂停时自动前进到下一张（hover/拖拽/弹窗时暂停自动轮换）
+    // 仅 1 张卡时不步进：STEP=360° 的步进等于原地空转，直接保持焦点态
     target += STEP.value
     startTween(target)
   }
@@ -247,6 +231,7 @@ let startX = 0
 let startSpin = 0
 let moved = 0
 function onDown(e) {
+  if (isSingle.value) return // 单卡不拖拽，避免把唯一的卡片转到背面
   dragging.value = true
   moved = 0
   startX = e.clientX
@@ -277,6 +262,7 @@ function onPointerLeave() {
 
 /* ---------- 箭头：步进公转 ---------- */
 function stepDir(dir) {
+  if (isSingle.value) return
   target += dir * STEP.value
   startTween(target)
 }
@@ -306,7 +292,6 @@ watch([query, activeCat], () => {
 /* ---------- 详情弹窗 ---------- */
 const detail = ref(null)
 function openDetail(it) {
-  if (it.placeholder) return // 占位组件不打开详情
   if (justDragged.value) {
     justDragged.value = false
     return
@@ -421,11 +406,11 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
     </nav>
 
     <div class="stage-wrap fx-static">
-      <button class="ring-nav" type="button" aria-label="逆时针旋转" @click="stepDir(-1)">‹</button>
+      <button v-if="!isSingle" class="ring-nav" type="button" aria-label="逆时针旋转" @click="stepDir(-1)">‹</button>
 
       <div
         class="viewport"
-        :class="{ dragging }"
+        :class="{ dragging, 'is-single': isSingle }"
         @pointerdown="onDown"
         @pointermove="onMove"
         @pointerup="onUp"
@@ -445,24 +430,12 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
             v-for="(it, i) in displayItems"
             :key="it.id"
             class="card"
-            :class="{ placeholder: it.placeholder }"
             :ref="(el) => setCardRef(el, i)"
             @click="openDetail(it)"
           >
             <!-- 立体卡片：六面体（前/后/四侧边），径向刚性朝向，随轨道公转不自转 -->
             <div class="card__vol">
               <div class="card__face front">
-                <!-- 占位骨架：缺数据时以骨架块填充，保持布局结构与动画一致 -->
-                <template v-if="it.placeholder">
-                  <span class="skel skel-cat"></span>
-                  <span class="skel skel-title"></span>
-                  <span class="skel skel-line"></span>
-                  <span class="skel skel-line short"></span>
-                  <div class="skel skel-tech">
-                    <i></i><i></i><i></i>
-                  </div>
-                </template>
-                <template v-else>
                 <div class="card-top">
                   <span class="card-cat">{{ (catMap[it.category] || {}).name || '作品' }}</span>
                   <span v-if="it.script" class="card-lang">{{ it.scriptLang || 'sh' }}</span>
@@ -520,7 +493,6 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
                     >⬇</a
                   >
                 </div>
-                </template>
               </div>
               <div class="card__face back" aria-hidden="true"></div>
               <div class="card__edge left" aria-hidden="true"></div>
@@ -536,11 +508,11 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
         </div>
       </div>
 
-      <button class="ring-nav" type="button" aria-label="顺时针旋转" @click="stepDir(1)">›</button>
+      <button v-if="!isSingle" class="ring-nav" type="button" aria-label="顺时针旋转" @click="stepDir(1)">›</button>
     </div>
 
-    <!-- 分页：涵盖全部作品，同页内切换 -->
-    <nav class="pager" aria-label="作品分页">
+    <!-- 分页：仅有一页时隐藏（作品数 > PER_PAGE 后自动出现），避免单件作品下的冗余控件 -->
+    <nav v-if="pageCount > 1" class="pager" aria-label="作品分页">
       <span class="pg-info">{{ isFiltering ? '命中' : '共' }} {{ all.length }} 件 · 第 {{ page + 1 }}/{{ pageCount }} 页</span>
       <div class="pg-btns">
         <button
@@ -816,51 +788,6 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
   }
 }
 
-/* ---------- 占位骨架（缺少真实数据时使用，风格与真实卡片一致） ---------- */
-.card.placeholder .card__face.front {
-  /* 与真实卡片一致地垂直居中内容块（被下方 .card__face.front 的 justify-content:center 统一约束），
-     使骨架视觉重心居中，避免只堆在上半部显得「偏上」 */
-  gap: 0.7rem;
-}
-.skel {
-  display: block;
-  border-radius: 6px;
-  background: linear-gradient(
-    100deg,
-    color-mix(in srgb, var(--color-bg-elevated) 60%, transparent) 30%,
-    color-mix(in srgb, var(--color-border) 80%, #fff 10%) 50%,
-    color-mix(in srgb, var(--color-bg-elevated) 60%, transparent) 70%
-  );
-  background-size: 200% 100%;
-  animation: skelShine 1.4s ease-in-out infinite;
-}
-.skel-cat { width: 38%; height: 0.7rem; }
-.skel-title { width: 70%; height: 1.05rem; border-radius: 8px; }
-.skel-line { width: 100%; height: 0.62rem; }
-.skel-line.short { width: 62%; }
-.skel-tech {
-  display: flex;
-  gap: 0.35rem;
-}
-.skel-tech i {
-  width: 2.4rem;
-  height: 0.95rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-bg-elevated) 80%, var(--color-border));
-  animation: skelShine 1.4s ease-in-out infinite;
-  background-size: 200% 100%;
-}
-@keyframes skelShine {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .skel,
-  .skel-tech i {
-    animation: none;
-  }
-}
-
 /* ---------- 公转舞台 ---------- */
 .stage-wrap {
   display: flex;
@@ -908,6 +835,11 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
 }
 .viewport:active {
   cursor: grabbing;
+}
+/* 仅 1 件作品：不公转、不拖拽，光标不再提示可抓取 */
+.viewport.is-single,
+.viewport.is-single:active {
+  cursor: default;
 }
 
 /* 暗角：聚焦视线到中心舞台，强化「镜头」纵深感（不挡交互）；随舞台圆角裁切 */
@@ -983,7 +915,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
    默认 transform 为朝前兜底，避免 JS 未执行时卡片侧对屏幕只剩薄边而「看不见」。 */
 .card {
   --w: 168px; /* 略增大，提升正文字号可读性 */
-  --h: 208px; /* 收紧高度：使卡片盒更贴合内容、减少内部留白（占位骨架不再只填满约一半） */
+  --h: 208px; /* 收紧高度：使卡片盒更贴合内容、减少内部留白 */
   --t: 18px; /* 立体厚度 */
   --th: calc(var(--t) / 2);
   --radius: 18px; /* 统一圆角 */
@@ -1046,7 +978,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
   transform: translateZ(var(--th));
   display: flex;
   flex-direction: column;
-  /* 内容块在卡片内垂直居中：真实卡与占位卡统一，使「视觉重心」居中，
+  /* 内容块在卡片内垂直居中，使「视觉重心」居中，
      消除因 summary 撑满、文字堆在上半部而显得「偏上」的错觉 */
   justify-content: center;
   gap: 0.5rem;

@@ -10,6 +10,8 @@ vite.config.js.timestamp-*.mjs
 
 # ===== 本地调试 / 验证产物（历史临时文件）=====
 .verify-build*
+# 无头浏览器 DOM 验证的临时用户数据目录
+.edge-verify*
 playtest.mjs
 test/_shot.mjs
 click-disappear-debug-guide.html
