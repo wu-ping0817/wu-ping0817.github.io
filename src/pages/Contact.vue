@@ -13,6 +13,13 @@ const items = [
     desc: '代码与作品仓库，欢迎来翻翻',
   },
   {
+    key: 'gitee',
+    label: 'Gitee',
+    value: '项目仓库',
+    href: c.gitee,
+    desc: '国内镜像仓库，代码与作品也在这边',
+  },
+  {
     key: 'email',
     label: '邮箱',
     value: c.email || '（还在路上）',
