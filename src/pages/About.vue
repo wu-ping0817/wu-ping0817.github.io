@@ -142,7 +142,7 @@ onBeforeUnmount(() => {
         ><i class="live-dot" aria-hidden="true"></i>最近打算做的</span
       >
       <ul class="plans-list">
-        <li class="plans-item">游戏没有中文实在难受</li>
+        <li class="plans-item">最近正在思考人生（发呆）</li>
       </ul>
     </div>
   </section>
